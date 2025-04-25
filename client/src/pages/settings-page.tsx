@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Settings, BellRing, Shield, Clock, Globe, Sun, Moon, ChevronRight, AlertTriangle, Check, LinkIcon } from "lucide-react";
+import { Loader2, Settings, BellRing, Shield, Clock, Globe, Sun, Moon, ChevronRight, AlertTriangle, Check, LinkIcon, BarChart3 } from "lucide-react";
 import { SiBinance, SiCoinbase } from "react-icons/si";
 import { FaExchangeAlt } from "react-icons/fa";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

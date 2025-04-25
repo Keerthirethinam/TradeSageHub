@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,11 +9,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { User, Settings } from "lucide-react";
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -49,28 +52,38 @@ export default function UserMenu() {
           <DropdownMenuItem
             className="cursor-pointer"
             onClick={() => {
-              toast({
-                title: "Profile",
-                description: "Profile view not implemented yet",
-              });
+              navigate("/profile");
               setOpen(false);
             }}
           >
+            <User className="h-4 w-4 mr-2" />
             Your Profile
           </DropdownMenuItem>
           <DropdownMenuItem
             className="cursor-pointer"
             onClick={() => {
-              toast({
-                title: "Settings",
-                description: "Settings view not implemented yet",
-              });
+              navigate("/settings");
               setOpen(false);
             }}
           >
+            <Settings className="h-4 w-4 mr-2" />
             Settings
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="h-4 w-4 mr-2"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
             Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
