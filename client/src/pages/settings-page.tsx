@@ -67,6 +67,16 @@ export default function SettingsPage() {
       notes: "",
     },
   });
+
+  const icicidirectForm = useForm<z.infer<typeof apiConfigSchema>>({
+    resolver: zodResolver(apiConfigSchema),
+    defaultValues: {
+      apiKey: "",
+      apiSecret: "",
+      isTestnet: true,
+      notes: "",
+    },
+  });
   
   // Get the current form based on the selected API service
   const getCurrentForm = () => {
@@ -79,6 +89,8 @@ export default function SettingsPage() {
         return krakenForm;
       case "bitfinex":
         return bitfinexForm;
+      case "icicidirect":
+        return icicidirectForm;
       default:
         return binanceForm;
     }
@@ -128,6 +140,8 @@ export default function SettingsPage() {
         return <FaExchangeAlt className="h-6 w-6 text-purple-500" />;
       case "bitfinex":
         return <FaExchangeAlt className="h-6 w-6 text-green-500" />;
+      case "icicidirect":
+        return <FaExchangeAlt className="h-6 w-6 text-red-500" />;
       default:
         return null;
     }
@@ -143,6 +157,8 @@ export default function SettingsPage() {
         return "Kraken";
       case "bitfinex":
         return "Bitfinex";
+      case "icicidirect":
+        return "ICICI Direct";
       default:
         return "";
     }
@@ -167,7 +183,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="space-y-1">
-                {["binance", "coinbase", "kraken", "bitfinex"].map((service) => (
+                {["binance", "coinbase", "kraken", "bitfinex", "icicidirect"].map((service) => (
                   <Button
                     key={service}
                     variant={currentApiService === service ? "default" : "ghost"}
