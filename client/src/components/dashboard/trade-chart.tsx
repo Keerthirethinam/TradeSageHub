@@ -6,6 +6,23 @@ interface TradeChartProps {
   timeframe: "1D" | "1W" | "1M" | "3M" | "1Y" | "All";
 }
 
+// Format the date based on the timeframe
+const getFormattedDate = (date: Date, timeframe: string) => {
+  switch (timeframe) {
+    case "1D":
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    case "1W":
+    case "1M":
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    case "3M":
+    case "1Y":
+    case "All":
+      return date.toLocaleDateString([], { month: 'short', year: '2-digit' });
+    default:
+      return date.toLocaleDateString();
+  }
+};
+
 export default function TradeChart({ timeframe }: TradeChartProps) {
   // Generate sample data based on the selected timeframe
   const data = useMemo(() => {
@@ -61,23 +78,6 @@ export default function TradeChart({ timeframe }: TradeChartProps) {
     
     return result;
   }, [timeframe]);
-  
-  // Format the date based on the timeframe
-  const getFormattedDate = (date: Date, timeframe: string) => {
-    switch (timeframe) {
-      case "1D":
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      case "1W":
-      case "1M":
-        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-      case "3M":
-      case "1Y":
-      case "All":
-        return date.toLocaleDateString([], { month: 'short', year: '2-digit' });
-      default:
-        return date.toLocaleDateString();
-    }
-  };
   
   const formatYAxis = (value: number) => {
     return `$${value.toLocaleString()}`;
