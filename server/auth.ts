@@ -30,19 +30,17 @@ export async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSecret = process.env.SESSION_SECRET || 'your-secret-key';
-
+  
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret,
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
     store: storage.sessionStore,
-    name: 'tradingApp.sid',
     cookie: {
       secure: false,
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: 'lax',
-      path: '/'
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
     }
   };
 
@@ -66,12 +64,10 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user: any, done) => {
-    done(null, { id: user.id, username: user.username });
-  });
-
-  passport.deserializeUser(async (user: any, done) => {
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id: number, done) => {
     try {
+      const user = await storage.getUser(id);
       done(null, user);
     } catch (error) {
       done(error);
