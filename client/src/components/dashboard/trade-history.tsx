@@ -5,13 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 
-interface TradeHistoryProps {
-  activities: any[] | undefined;
-  isLoading: boolean;
-}
+import { useQuery } from "@tanstack/react-query";
 
-export default function TradeHistory({ activities, isLoading }: TradeHistoryProps) {
+export default function TradeHistory() {
   const { toast } = useToast();
+  const { data: activities, isLoading } = useQuery({
+    queryKey: ["/api/trade-activities"],
+    retry: 1
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
