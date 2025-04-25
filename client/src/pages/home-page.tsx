@@ -248,7 +248,7 @@ export default function HomePage() {
           
           {/* Recent Trade Activity */}
           <div className="mt-8">
-            <TradeHistory activities={activities} isLoading={isLoadingActivities} />
+            <TradeHistory />
           </div>
         </div>
       </div>
