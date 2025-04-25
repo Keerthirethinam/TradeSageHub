@@ -139,6 +139,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile routes
+  app.patch(`${apiPrefix}/user/profile`, isAuthenticated, async (req, res) => {
+    try {
+      const { username, currentPassword, newPassword } = req.body;
+      const userId = req.user!.id;
+      
+      // Verify the current password
+      const isPasswordValid = await storage.validateUserPassword(userId, currentPassword);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      
+      // Update user with new details
+      const userData: any = { username };
+      
+      // If a new password is provided, hash and update it
+      if (newPassword) {
+        userData.password = await storage.hashPassword(newPassword);
+      }
+      
+      const updatedUser = await storage.updateUser(userId, userData);
+      
+      // Return the updated user (without the password)
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

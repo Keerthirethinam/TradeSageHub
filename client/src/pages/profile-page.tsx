@@ -401,7 +401,7 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent>
                     <Form {...form}>
-                      <form className="space-y-6">
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
                           control={form.control}
                           name="currentPassword"
@@ -413,7 +413,8 @@ export default function ProfilePage() {
                                   type="password" 
                                   placeholder="Enter your current password" 
                                   {...field}
-                                  disabled={!isEditing || isPending}
+                                  disabled={isPending}
+                                  required
                                 />
                               </FormControl>
                               <FormMessage />
@@ -432,7 +433,7 @@ export default function ProfilePage() {
                                   type="password" 
                                   placeholder="Enter new password" 
                                   {...field}
-                                  disabled={!isEditing || isPending}
+                                  disabled={isPending}
                                 />
                               </FormControl>
                               <FormDescription>
@@ -454,7 +455,7 @@ export default function ProfilePage() {
                                   type="password" 
                                   placeholder="Confirm your new password" 
                                   {...field}
-                                  disabled={!isEditing || isPending}
+                                  disabled={isPending}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -462,32 +463,32 @@ export default function ProfilePage() {
                           )}
                         />
                         
-                        {isEditing && (
-                          <div className="pt-4 flex space-x-2">
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              onClick={handleCancel}
-                              disabled={isPending}
-                            >
-                              Cancel
-                            </Button>
-                            <Button 
-                              type="button"
-                              onClick={form.handleSubmit(onSubmit)}
-                              disabled={isPending}
-                            >
-                              {isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Saving...
-                                </>
-                              ) : (
-                                "Update Password"
-                              )}
-                            </Button>
-                          </div>
-                        )}
+                        <div className="pt-4 flex space-x-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handleCancel}
+                            disabled={isPending}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit"
+                            disabled={isPending || 
+                              !form.getValues("currentPassword") || 
+                              (form.getValues("newPassword") && !form.getValues("confirmNewPassword"))
+                            }
+                          >
+                            {isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              "Update Password"
+                            )}
+                          </Button>
+                        </div>
                       </form>
                     </Form>
                   </CardContent>
