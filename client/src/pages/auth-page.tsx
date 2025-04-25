@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +29,13 @@ export default function AuthPage() {
   const [tab, setTab] = useState<"login" | "register">("login");
   const { user, loginMutation, registerMutation } = useAuth();
   const [, navigate] = useLocation();
+  
+  // Handle navigation when user is logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -60,10 +67,14 @@ export default function AuthPage() {
     registerMutation.mutate(registerData);
   };
 
-  // If user is logged in, redirect to home
+  // If user is logged in, show loading state until useEffect redirects
   if (user) {
-    navigate("/");
-    return null;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Redirecting...</span>
+      </div>
+    );
   }
 
   return (
