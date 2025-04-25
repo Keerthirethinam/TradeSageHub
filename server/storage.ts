@@ -11,6 +11,9 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: { username: string; password: string }): Promise<User>;
+  updateUser(id: number, userData: any): Promise<User>;
+  validateUserPassword(userId: number, password: string): Promise<boolean>;
+  hashPassword(password: string): Promise<string>;
   
   getTrades(userId: number): Promise<any[]>;
   getTradeById(tradeId: number): Promise<any | undefined>;
@@ -21,7 +24,7 @@ export interface IStorage {
   getTradeActivities(userId: number, limit?: number): Promise<any[]>;
   createTradeActivity(activityData: any): Promise<any>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any for sessionStore type
 }
 
 export const storage: IStorage = {
@@ -42,6 +45,30 @@ export const storage: IStorage = {
   async createUser(userData) {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
+  },
+  
+  async updateUser(id: number, userData: any) {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  },
+  
+  async validateUserPassword(userId: number, password: string) {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // Use scrypt from server/auth.ts to compare passwords
+    const { comparePasswords } = require('./auth');
+    return await comparePasswords(password, user.password);
+  },
+  
+  async hashPassword(password: string) {
+    // Use hashPassword from server/auth.ts
+    const { hashPassword } = require('./auth');
+    return await hashPassword(password);
   },
 
   async getTrades(userId: number) {

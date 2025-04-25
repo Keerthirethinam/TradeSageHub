@@ -476,7 +476,7 @@ export default function ProfilePage() {
                             type="submit"
                             disabled={isPending || 
                               !form.getValues("currentPassword") || 
-                              (form.getValues("newPassword") && !form.getValues("confirmNewPassword"))
+                              (!!form.getValues("newPassword") && !form.getValues("confirmNewPassword"))
                             }
                           >
                             {isPending ? (
