@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
+import { useState, useEffect } from 'react';
 
 interface TradeHistoryProps {
   activities: any[] | undefined;
@@ -12,6 +13,7 @@ interface TradeHistoryProps {
 
 export default function TradeHistory({ activities, isLoading }: TradeHistoryProps) {
   const { toast } = useToast();
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -35,13 +37,37 @@ export default function TradeHistory({ activities, isLoading }: TradeHistoryProp
 
   const formatPrice = (price: string | number) => {
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    
+
     if (isNaN(numPrice)) return '$0.00';
-    
+
     return numPrice >= 1 
       ? `$${numPrice.toFixed(2)}` 
       : `$${numPrice.toFixed(4)}`;
   };
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch("/api/trade-activities", {
+          credentials: "include"
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setActivities(data);
+      } catch (error: any) {
+        setFetchError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const [activities, setActivities] = useState<any[] | undefined>(undefined);
+    const [isLoading, setIsLoading] = useState(true);
+
+    fetchActivities();
+  }, []);
 
   return (
     <Card>
@@ -126,7 +152,7 @@ export default function TradeHistory({ activities, isLoading }: TradeHistoryProp
               ) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                    No trade activities found
+                    {fetchError || "No trade activities found"}
                   </td>
                 </tr>
               )}
