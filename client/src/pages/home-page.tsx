@@ -38,19 +38,60 @@ export default function HomePage() {
       };
     }
 
+    // Count active trades
     const activeTrades = trades.filter(trade => trade.isActive).length;
+    
+    // Calculate total balance from trades
+    const totalInvestment = trades.reduce((sum, trade) => {
+      return sum + (trade.entryPrice * trade.quantity);
+    }, 0);
+    
+    const formattedBalance = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(totalInvestment);
     
     // Calculate total profit/loss from active trades
     const totalProfitLoss = trades
       .filter(trade => trade.isActive)
-      .reduce((sum, trade) => sum + parseFloat(trade.profitLoss || 0), 0);
+      .reduce((sum, trade) => {
+        // Calculate the current value of the trade using current price
+        const currentValue = trade.currentPrice * trade.quantity;
+        const initialValue = trade.entryPrice * trade.quantity;
+        return sum + (currentValue - initialValue);
+      }, 0);
+    
+    // Calculate daily profit percentage
+    const totalInitialValue = trades
+      .filter(trade => trade.isActive)
+      .reduce((sum, trade) => sum + (trade.entryPrice * trade.quantity), 0);
+    
+    const profitPercentage = totalInitialValue > 0 
+      ? (totalProfitLoss / totalInitialValue) * 100 
+      : 0;
+    
+    const formattedProfit = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(totalProfitLoss);
+    
+    const formattedPercentage = `${profitPercentage > 0 ? '↑' : '↓'} ${Math.abs(profitPercentage).toFixed(2)}%`;
+    
+    // Determine API status from the most recent trade
+    const latestTrade = [...trades].sort((a, b) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )[0];
+    
+    const apiStatus = latestTrade && new Date(latestTrade.updatedAt).getTime() > Date.now() - 24 * 60 * 60 * 1000
+      ? "Connected"
+      : "Disconnected";
     
     return {
-      balance: "$12,450.80", // This would normally come from an API
+      balance: formattedBalance,
       activeTrades,
-      dailyProfit: `$${totalProfitLoss.toFixed(2)}`,
-      dailyProfitPercentage: totalProfitLoss > 0 ? "↑ 3.2%" : "↓ 1.5%",
-      apiStatus: "Connected"
+      dailyProfit: formattedProfit,
+      dailyProfitPercentage: formattedPercentage,
+      apiStatus
     };
   }, [trades]);
 
@@ -82,8 +123,8 @@ export default function HomePage() {
             <StatCard 
               label="Total Balance"
               value={stats.balance}
-              change="3.2%"
-              changeType="increase"
+              change={stats.dailyProfitPercentage}
+              changeType={stats.dailyProfitPercentage.includes('↑') ? "increase" : "decrease"}
               icon={<TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />}
               bgColor="bg-green-100 dark:bg-green-900"
               textColor="text-green-600 dark:text-green-400" 
@@ -92,8 +133,8 @@ export default function HomePage() {
             <StatCard 
               label="Active Trades"
               value={String(stats.activeTrades)}
-              change="2"
-              changeType="increase"
+              change={`${stats.activeTrades} active`}
+              changeType="status"
               icon={<TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
               bgColor="bg-blue-100 dark:bg-blue-900"
               textColor="text-blue-600 dark:text-blue-400" 
@@ -102,8 +143,8 @@ export default function HomePage() {
             <StatCard 
               label="Daily Profit"
               value={stats.dailyProfit}
-              change="12.5%"
-              changeType="increase"
+              change={stats.dailyProfitPercentage}
+              changeType={stats.dailyProfitPercentage.includes('↑') ? "increase" : "decrease"}
               icon={<TrendingUp className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
               bgColor="bg-indigo-100 dark:bg-indigo-900"
               textColor="text-indigo-600 dark:text-indigo-400" 
@@ -112,8 +153,8 @@ export default function HomePage() {
             <StatCard 
               label="API Status"
               value={stats.apiStatus}
-              change="Active"
-              changeType="status"
+              change={stats.apiStatus === "Connected" ? "Active" : "Inactive"}
+              changeType={stats.apiStatus === "Connected" ? "status" : "neutral"}
               icon={<TrendingUp className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />}
               bgColor="bg-yellow-100 dark:bg-yellow-900"
               textColor="text-yellow-600 dark:text-yellow-400" 

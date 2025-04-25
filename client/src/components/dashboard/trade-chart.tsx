@@ -1,6 +1,8 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface TradeChartProps {
   timeframe: "1D" | "1W" | "1M" | "3M" | "1Y" | "All";
@@ -24,8 +26,22 @@ const getFormattedDate = (date: Date, timeframe: string) => {
 };
 
 export default function TradeChart({ timeframe }: TradeChartProps) {
-  // Generate sample data based on the selected timeframe
+  // Fetch trades data
+  const { data: trades, isLoading } = useQuery({
+    queryKey: ["/api/trades"],
+  });
+  
+  // Fetch activities data for historical prices
+  const { data: activities } = useQuery({
+    queryKey: ["/api/trade-activities"],
+  });
+
+  // Generate chart data based on real trades
   const data = useMemo(() => {
+    if (!trades || !activities || !Array.isArray(trades) || !Array.isArray(activities)) {
+      return [];
+    }
+    
     const now = new Date();
     const result = [];
     let points;
@@ -61,23 +77,67 @@ export default function TradeChart({ timeframe }: TradeChartProps) {
         interval = 60 * 60 * 1000;
     }
     
-    // Starting value
-    let value = 10000;
+    // Calculate time range based on timeframe
+    const startTime = new Date(now.getTime() - (points * interval));
     
-    for (let i = points; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * interval);
+    // Create data points at regular intervals
+    for (let i = 0; i <= points; i++) {
+      const pointDate = new Date(startTime.getTime() + (i * interval));
+      const formattedDate = getFormattedDate(pointDate, timeframe);
       
-      // Add some randomness to the value
-      value = value * (1 + (Math.random() * 0.06 - 0.03));
+      // Calculate portfolio value at this date
+      const portfolioValue = calculatePortfolioValueAtDate(trades, activities, pointDate);
       
       result.push({
-        date: getFormattedDate(date, timeframe),
-        value: Math.round(value * 100) / 100,
+        date: formattedDate,
+        value: portfolioValue,
       });
     }
     
     return result;
-  }, [timeframe]);
+  }, [timeframe, trades, activities]);
+  
+  // Helper function to calculate portfolio value at a specific date
+  function calculatePortfolioValueAtDate(trades: any[], activities: any[], date: Date) {
+    if (!trades || !activities || !Array.isArray(trades) || !Array.isArray(activities)) {
+      return 0;
+    }
+    
+    // Filter trades that existed at the given date
+    const relevantTrades = trades.filter(trade => {
+      const createdDate = new Date(trade.createdAt);
+      // Include if trade was created before or on the given date
+      // and either it's still active or it was closed after the given date
+      return createdDate <= date && (
+        trade.isActive || 
+        (trade.closedAt && new Date(trade.closedAt) > date)
+      );
+    });
+    
+    // Calculate total value at the given date
+    return relevantTrades.reduce((total, trade) => {
+      const quantity = trade.quantity;
+      
+      // Get the price of the symbol at the given date
+      // We'll look at activities to estimate the price
+      let estimatedPrice = trade.entryPrice; // Default to entry price
+      
+      // Look for an activity close to the given date to get a better price estimate
+      const relevantActivities = activities
+        .filter(activity => activity.tradeId === trade.id && new Date(activity.createdAt) <= date)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      if (relevantActivities.length > 0 && relevantActivities[0].price) {
+        estimatedPrice = relevantActivities[0].price;
+      } else if (date >= new Date() && trade.currentPrice) {
+        // If we're looking at current or future date, use current price if available
+        estimatedPrice = trade.currentPrice;
+      }
+      
+      const tradeValue = quantity * estimatedPrice;
+      return total + tradeValue;
+    }, 0);
+  }
   
   const formatYAxis = (value: number) => {
     return `$${value.toLocaleString()}`;
@@ -86,6 +146,16 @@ export default function TradeChart({ timeframe }: TradeChartProps) {
   const formatTooltip = (value: number) => {
     return [`$${value.toLocaleString()}`, "Portfolio Value"];
   };
+
+  // Show loading state if data is still being fetched
+  if (isLoading) {
+    return (
+      <div className="bg-slate-50 dark:bg-slate-700 rounded-lg overflow-hidden h-64 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading chart data...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-50 dark:bg-slate-700 rounded-lg overflow-hidden h-64">
