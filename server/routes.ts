@@ -15,9 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.isAuthenticated() && req.user) {
       return next();
     }
-    req.session.destroy(() => {
-      res.status(401).json({ message: "Unauthorized" });
-    });
+    res.status(401).json({ message: "Unauthorized" });
   };
 
   // Trade routes
